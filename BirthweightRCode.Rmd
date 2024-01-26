@@ -8,7 +8,10 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(ggplot2)
+library(GGally)
+library(car)
+library(MASS)
+library(lmtest)
 
 baby = read.delim("Birthweights.txt",sep=' ')
 ```
@@ -51,9 +54,91 @@ cor(baby$Mage,baby$BirthWeight)
 
 5) 
 
-```{r}
-baby_edited = select(data,2,3,4,5,1)
-baby_edited
-ggpair()
+```{r message=F}
+baby_edited <- select(baby,2,3,4,5,1)
+
+ggpairs(baby_edited, progress = F)
 ```
 
+## Fitting a model
+
+1)
+
+```{r}
+X <- model.matrix(object=BirthWeight ~ ., data=baby)
+y <- baby$BirthWeight
+
+B <- solve((t(X)%*%X)) %*% t(X) %*% y
+s_squared <- (t(y-X%*%B) %*% (y-X%*%B))/(nrow(baby)-ncol(X))
+
+# My B
+print(B)
+
+# My s^2
+print(s_squared)
+
+baby.lm <- lm(formula=BirthWeight ~ ., data=baby)
+
+# lm's B
+print(coef(baby.lm))
+
+# lm's s^2
+print(sigma(baby.lm)**2)
+```
+
+2)
+
+```{r}
+fitted_vals <- X %*% B
+
+# My fitted values
+print(head(fitted_vals))
+
+# lm's fitted values
+print(head(fitted(baby.lm)))
+```
+
+3)
+
+```{r}
+resids <- y - fitted_vals
+
+# My residuals
+print(head(resids))
+
+# lm's residuals
+print(head(resid(baby.lm)))
+```
+
+4)
+
+```{r}
+summary(baby.lm)$r.squared
+```
+
+## Checking Assumptions
+
+1)
+
+```{r}
+avPlots(baby.lm)
+```
+Comparing Birthweights vs Mage and Birthweights vs Gage, both are fairly linear. I think it meets linearity.
+
+2)
+
+```{r, message = FALSE }
+ggplot()+geom_histogram(mapping=aes(x=stdres(baby.lm)))
+
+ks.test(stdres(baby.lm), "pnorm")
+```
+Both the histogram of residuals and the test suggest the residuals are normally distributed.
+
+3)
+
+```{r}
+ggplot() + geom_point(aes(fitted(baby.lm),stdres(baby.lm)))
+
+bptest(baby.lm)
+```
+Both the fitted vs standardized residuals and the test suggest we have equal variance as well.
