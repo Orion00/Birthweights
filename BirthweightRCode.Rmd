@@ -1,0 +1,59 @@
+---
+title: "Birthweight R Code"
+author: "Orion Bowers"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+
+baby = read.delim("Birthweights.txt",sep=' ')
+```
+
+## EDA
+
+1)
+
+```{r}
+baby_mage = ggplot(data=baby,aes(x=Mage,y=BirthWeight))+
+  geom_point()
+
+baby_mage
+```
+
+2)
+
+```{r}
+baby_race = ggplot(data=baby, aes(x=Race,y=BirthWeight))+
+  geom_boxplot()
+
+baby_race
+```
+
+3)
+
+```{r}
+baby_gage = ggplot(data=baby,aes(x=Gage,y=BirthWeight,color=Gen))+
+  geom_point()
+
+baby_gage
+```
+
+4)
+
+```{r}
+# summary(baby)
+cor(baby$Mage,baby$BirthWeight)
+```
+
+5) 
+
+```{r}
+baby_edited = select(data,2,3,4,5,1)
+baby_edited
+ggpair()
+```
+
